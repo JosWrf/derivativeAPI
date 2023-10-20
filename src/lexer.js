@@ -3,13 +3,27 @@ import { Token, TokenType } from "./token.js";
 class Lexer {
   #currPos = 0;
   #text = "";
+  #functions = {
+    cos: TokenType.COS,
+    accos: TokenType.ACOS,
+    sin: TokenType.SIN,
+    asin: TokenType.ASIN,
+    tan: TokenType.TAN,
+    atan: TokenType.ATAN,
+    exp: TokenType.EXP,
+    ln: TokenType.LN,
+  };
 
   isAtEnd() {
-    return this.currPos == this.#text.length;
+    return this.#currPos == this.#text.length;
   }
 
   isNumeric(char) {
     return !isNaN(parseInt(char));
+  }
+
+  isLetter(char) {
+    return char.toLowerCase() != char.toUpperCase();
   }
 
   peak() {
@@ -20,7 +34,13 @@ class Lexer {
     return this.#text[this.#currPos++];
   }
 
-  handleOperands() {
+  consumeMultiple(n) {
+    for (let i = 0; i < n; i++) {
+      this.consume();
+    }
+  }
+
+  handleNumbers() {
     const start = this.#currPos - 1;
     while (!this.isAtEnd() && this.isNumeric(this.peak())) {
       this.consume();
@@ -46,28 +66,42 @@ class Lexer {
     return new Token(TokenType.NUM, this.#text.slice(start, this.#currPos));
   }
 
+  handleAlphabetic() {
+    const start = this.#currPos - 1;
+    for (const functionName of Object.keys(this.#functions)) {
+      if (this.#text.startsWith(functionName, start)) {
+        this.consumeMultiple(functionName.length - 1);
+        return new Token(this.#functions[functionName], functionName);
+      }
+    }
+
+    return new Token(TokenType.VAR, this.#text.slice(start, this.#currPos));
+  }
+
   scan() {
     const currChar = this.consume();
     switch (currChar) {
       case "+":
-        return new Token(TokenType.PLUS, "+");
+        return new Token(TokenType.PLUS, currChar);
       case "-":
-        return new Token(TokenType.MINUS, "-");
+        return new Token(TokenType.MINUS, currChar);
       case "/":
-        return new Token(TokenType.DIV, "/");
+        return new Token(TokenType.DIV, currChar);
       case "*":
-        return new Token(TokenType.MULT, "*");
+        return new Token(TokenType.MULT, currChar);
       case "^":
-        return new Token(TokenType.POW, "^");
+        return new Token(TokenType.POW, currChar);
       case "(":
-        return new Token(TokenType.OPPAR, "(");
+        return new Token(TokenType.OPPAR, currChar);
       case ")":
-        return new Token(TokenType.CPAR, ")");
+        return new Token(TokenType.CPAR, currChar);
       default:
         break;
     }
-    if (this.isNumeric(currChar)) {
-      return this.handleOperands();
+    if (this.isLetter(currChar)) {
+      return this.handleAlphabetic();
+    } else if (this.isNumeric(currChar)) {
+      return this.handleNumbers();
     } else {
       throw `Invalid Character encountered ${currChar} at position ${
         this.#currPos

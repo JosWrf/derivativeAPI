@@ -39,3 +39,24 @@ test("Invalid FP", () => {
   expect(() => lexer.scanInput("129.+")).toThrow();
   expect(() => lexer.scanInput("9.")).toThrow();
 });
+
+test("cos(exp(x))", () => {
+  const result = lexer.scanInput("cos(exp(x))");
+  const expectedTypes = [
+    TokenType.COS,
+    TokenType.OPPAR,
+    TokenType.EXP,
+    TokenType.OPPAR,
+    TokenType.VAR,
+    TokenType.CPAR,
+    TokenType.CPAR,
+    TokenType.EOF,
+  ];
+  expect(result.map((val) => val.type)).toEqual(expectedTypes);
+});
+
+test("lnl", () => {
+  const result = lexer.scanInput("lnl");
+  const expectedTypes = [TokenType.LN, TokenType.VAR, TokenType.EOF];
+  expect(result.map((val) => val.type)).toEqual(expectedTypes);
+});

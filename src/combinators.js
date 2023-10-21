@@ -87,4 +87,35 @@ function lazy(parserfunc) {
   return innerLazy;
 }
 
-export { token, alternative, any, map, apply, lazy };
+function repeat(parser) {
+  function innerRepeat(tokens) {
+    const results = [];
+    let currentInput = tokens;
+
+    try {
+      while (true) {
+        const result = parser(currentInput);
+        results.push(result.value);
+        currentInput = result.input;
+      }
+    } catch (error) {}
+
+    return new Result(results, currentInput);
+  }
+
+  return innerRepeat;
+}
+
+function optional(parser) {
+  function innerOptional(tokens) {
+    try {
+      return parser(tokens);
+    } catch (error) {
+      return new Result(null, tokens);
+    }
+  }
+
+  return innerOptional;
+}
+
+export { token, alternative, any, map, apply, lazy, repeat, optional };

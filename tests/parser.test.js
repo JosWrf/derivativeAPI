@@ -4,9 +4,15 @@ import {
   parentheses,
   functions,
   unary,
-  groupings,
+  power,
 } from "../src/parser.js";
-import { SymbolAST, ExprAST, FuncAST, UnaryAST } from "../src/ast.js";
+import {
+  SymbolAST,
+  ExprAST,
+  FuncAST,
+  UnaryAST,
+  BinaryAST,
+} from "../src/ast.js";
 
 const lexer = new Lexer();
 
@@ -44,4 +50,18 @@ test("Unary Parser: -cos(y)", () => {
   expect(result.input.length).toBe(1);
   expect(result.value).toBeInstanceOf(UnaryAST);
   expect(result.value.expr).toBeInstanceOf(FuncAST);
+});
+
+test("Power Parser: (y)^x", () => {
+  const tokens = lexer.scanInput("(y)^x");
+  const result = power()(tokens);
+  expect(result.input.length).toBe(1);
+  expect(result.value).toBeInstanceOf(BinaryAST);
+});
+
+test("Power Parser: x^x^x", () => {
+  const tokens = lexer.scanInput("x^x^x");
+  const result = power()(tokens);
+  expect(result.input.length).toBe(1);
+  expect(result.value).toBeInstanceOf(BinaryAST);
 });

@@ -45,4 +45,17 @@ class UnaryAST extends AST {
   }
 }
 
-export { SymbolAST, ExprAST, FuncAST, UnaryAST };
+class BinaryAST extends AST {
+  constructor(left, right, operator) {
+    super();
+    this.left = left;
+    this.right = right;
+    this.operator = operator;
+  }
+
+  accept(visitor) {
+    return visitor.visitBinary(this);
+  }
+}
+
+export { SymbolAST, ExprAST, FuncAST, UnaryAST, BinaryAST };

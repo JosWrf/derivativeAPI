@@ -1,6 +1,40 @@
-import { alternative, token, any, map, apply, lazy } from "./combinators.js";
+import {
+  alternative,
+  token,
+  any,
+  map,
+  apply,
+  lazy,
+  repeat,
+  optional,
+} from "./combinators.js";
 import { TokenType } from "./token.js";
-import { ExprAST, SymbolAST, FuncAST, UnaryAST } from "./ast.js";
+import { ExprAST, SymbolAST, FuncAST, UnaryAST, BinaryAST } from "./ast.js";
+
+function power() {
+  return map(
+    apply(
+      (left, right) => {
+        return right === null ? [left] : [left, ...right];
+      },
+      [
+        lazy(unary),
+        optional(
+          repeat(
+            apply((_, value) => value, [token(TokenType.POW), lazy(unary)])
+          )
+        ),
+      ]
+    ),
+    (values) => {
+      let root = values[0];
+      for (let index = 1; index < values.length; index++) {
+        root = new BinaryAST(root, values[index], TokenType.POW);
+      }
+      return root;
+    }
+  );
+}
 
 function unary() {
   return alternative(
@@ -19,7 +53,7 @@ function groupings() {
 function parentheses() {
   return apply(
     (oppar, expr, cpar) => new ExprAST(expr),
-    [token(TokenType.OPPAR), lazy(unary), token(TokenType.CPAR)]
+    [token(TokenType.OPPAR), lazy(power), token(TokenType.CPAR)]
   );
 }
 
@@ -38,7 +72,7 @@ function functions() {
         token(TokenType.LN),
       ]),
       token(TokenType.OPPAR),
-      lazy(unary),
+      lazy(power),
       token(TokenType.CPAR),
     ]
   );
@@ -51,4 +85,4 @@ function symbols() {
   );
 }
 
-export { symbols, parentheses, functions, groupings, unary };
+export { symbols, parentheses, functions, groupings, unary, power };

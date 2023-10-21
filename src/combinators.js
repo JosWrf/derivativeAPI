@@ -28,17 +28,6 @@ function token(expectedType) {
   return innerToken;
 }
 
-function concat(parser1, parser2) {
-  function innerConcat(tokens) {
-    const result = parser1(tokens);
-    const newTokens = result.input;
-    const result2 = parser2(newTokens);
-    return new Result([result.value, result2.value], result2.input);
-  }
-
-  return innerConcat;
-}
-
 function alternative(parser1, parser2) {
   function innerAlternative(tokens) {
     try {
@@ -63,4 +52,39 @@ function any(parsers) {
   return innerAny;
 }
 
-export { token, concat, alternative, any };
+function map(parser, func) {
+  function innerMap(tokens) {
+    const result = parser(tokens);
+    result.value = func(result.value);
+    return result;
+  }
+
+  return innerMap;
+}
+
+function apply(func, parsers) {
+  function innerApply(tokens) {
+    const results = [];
+    let currentInput = tokens;
+
+    for (const parser of parsers) {
+      const result = parser(currentInput);
+      results.push(result.value);
+      currentInput = result.input;
+    }
+
+    return new Result(func(...results), currentInput);
+  }
+
+  return innerApply;
+}
+
+function lazy(parserfunc) {
+  function innerLazy(tokens) {
+    return parserfunc()(tokens);
+  }
+
+  return innerLazy;
+}
+
+export { token, alternative, any, map, apply, lazy };

@@ -22,8 +22,13 @@ class Deriver {
   }
 
   visitExpr(exprNode) {
-    const result = exprNode.expr.accept(this);
-    return result;
+    const exprStr = exprNode.expr.accept(this);
+    const exprString = "(" + exprStr.exprString + ")";
+    const derivatives = this.#variables.reduce((result, key) => {
+          result[key] = "(" + exprStr.derivatives[key] + ")";
+          return result;
+        }, {});
+    return {exprString, derivatives};
   }
 
   visitFunc(funcNode) {
@@ -49,6 +54,23 @@ class Deriver {
           return result;
         }, {});
         break;
+      case TokenType.MULT:
+        derivatives = this.#variables.reduce((result, key) => {
+          result[key] =
+            leftExpr.exprString + operator + rightExpr.derivatives[key] + "+" + 
+            leftExpr.derivatives[key] + operator + rightExpr.exprString;
+          return result;
+        }, {});
+        break;
+      case TokenType.DIV:
+        derivatives = this.#variables.reduce((result, key) => {
+          result[key] =
+            "(" + leftExpr.derivatives[key] + "*" + rightExpr.exprString + "-" +
+            leftExpr.exprString + "*" + rightExpr.derivatives[key] + ")" + "/" + 
+            rightExpr.exprString + "^2";
+          return result;
+        }, {});
+        break;
       default:
         break;
     }
@@ -57,8 +79,13 @@ class Deriver {
   }
 
   visitUnary(unaryNode) {
-    //TODO: Add parentheses around all the derivates and expressions
-    return unaryNode.expr.accept(this);
+    const exprStr = unaryNode.expr.accept(this);
+    const exprString = "-" + exprStr.exprString;
+    const derivatives = this.#variables.reduce((result, key) => {
+          result[key] = exprStr.derivatives[key] + "*(-1)";
+          return result;
+        }, {});
+    return {exprString, derivatives};
   }
 }
 

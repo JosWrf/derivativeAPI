@@ -6,6 +6,8 @@ import {
   unary,
   power,
   factor,
+  linear,
+  Parser,
 } from "../src/parser.js";
 import {
   SymbolAST,
@@ -14,6 +16,7 @@ import {
   UnaryAST,
   BinaryAST,
 } from "../src/ast.js";
+import { TokenType } from "../src/token.js";
 
 const lexer = new Lexer();
 
@@ -74,4 +77,39 @@ test("Factor parser: x*y/2", () => {
   expect(result.value).toBeInstanceOf(BinaryAST);
   expect(result.value.left).toBeInstanceOf(BinaryAST);
   expect(result.value.right).toBeInstanceOf(SymbolAST);
+});
+
+test("Linear parser: x-y+2", () => {
+  const tokens = lexer.scanInput("x-y+2");
+  const result = linear()(tokens);
+  expect(result.input.length).toBe(1);
+  expect(result.value).toBeInstanceOf(BinaryAST);
+  expect(result.value.left).toBeInstanceOf(BinaryAST);
+  expect(result.value.right).toBeInstanceOf(SymbolAST);
+});
+
+test("Precedence: (x-y)^cos(4)/2", () => {
+  const tokens = lexer.scanInput("(x-y)^cos(4)/2");
+  const parser = new Parser();
+  const result = parser.parse(tokens);
+  expect(result).toBeInstanceOf(BinaryAST);
+  expect(result.operator).toBe(TokenType.DIV);
+});
+
+test("Error: (x*3-12", () => {
+  const tokens = lexer.scanInput("(x*3-12");
+  const parser = new Parser();
+  expect(() => parser.parse(tokens)).toThrow();
+});
+
+test("Error: x^", () => {
+  const tokens = lexer.scanInput("x^");
+  const parser = new Parser();
+  expect(() => parser.parse(tokens)).toThrow();
+});
+
+test("Error: 13+y-", () => {
+  const tokens = lexer.scanInput("13+y-");
+  const parser = new Parser();
+  expect(() => parser.parse(tokens)).toThrow();
 });

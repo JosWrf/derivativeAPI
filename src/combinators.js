@@ -118,4 +118,36 @@ function optional(parser) {
   return innerOptional;
 }
 
-export { token, alternative, any, map, apply, lazy, repeat, optional };
+function conditionalRepeat(condParser, thenParser) {
+  function innerConditionalRepeat(tokens) {
+    const results = [];
+    let currentInput = tokens;
+
+    while (true) {
+      try {
+        const result = condParser(currentInput);
+        results.push(result.value);
+        currentInput = result.input;
+      } catch (error) {
+        return new Result(results, currentInput);
+      }
+      const result = thenParser(currentInput);
+      results.push(result.value);
+      currentInput = result.input;
+    }
+  }
+
+  return innerConditionalRepeat;
+}
+
+export {
+  token,
+  alternative,
+  any,
+  map,
+  apply,
+  lazy,
+  repeat,
+  optional,
+  conditionalRepeat,
+};

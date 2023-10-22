@@ -5,11 +5,38 @@ import {
   map,
   apply,
   lazy,
-  repeat,
-  optional,
+  conditionalRepeat,
 } from "./combinators.js";
 import { TokenType } from "./token.js";
 import { ExprAST, SymbolAST, FuncAST, UnaryAST, BinaryAST } from "./ast.js";
+
+class Parser {
+  parse(tokens) {
+    return linear()(tokens).value;
+  }
+}
+
+function linear() {
+  return map(
+    apply(
+      (left, right) => [left, ...right],
+      [
+        lazy(factor),
+        conditionalRepeat(
+          alternative(token(TokenType.PLUS), token(TokenType.MINUS)),
+          lazy(factor)
+        ),
+      ]
+    ),
+    (values) => {
+      let root = values[0];
+      for (let index = 0; index < values.length - 1; index += 2) {
+        root = new BinaryAST(root, values[index], values[index + 1].type);
+      }
+      return root;
+    }
+  );
+}
 
 function factor() {
   return map(
@@ -17,26 +44,16 @@ function factor() {
       (left, right) => [left, ...right],
       [
         lazy(power),
-        optional(
-          repeat(
-            apply(
-              (operator, value) => {
-                return { operator, value };
-              },
-              [
-                alternative(token(TokenType.MULT), token(TokenType.DIV)),
-                lazy(power),
-              ]
-            )
-          )
+        conditionalRepeat(
+          alternative(token(TokenType.MULT), token(TokenType.DIV)),
+          lazy(power)
         ),
       ]
     ),
     (values) => {
       let root = values[0];
-      for (let index = 1; index < values.length; index++) {
-        const nodeInfo = values[index];
-        root = new BinaryAST(root, nodeInfo.value, nodeInfo.operator.type);
+      for (let index = 0; index < values.length - 1; index += 2) {
+        root = new BinaryAST(root, values[index], values[index + 1].type);
       }
       return root;
     }
@@ -49,10 +66,8 @@ function power() {
       (left, right) => [left, ...right],
       [
         lazy(unary),
-        optional(
-          repeat(
-            apply((_, value) => value, [token(TokenType.POW), lazy(unary)])
-          )
+        map(conditionalRepeat(token(TokenType.POW), lazy(unary)), (results) =>
+          results.filter((_, index) => index % 2 !== 0)
         ),
       ]
     ),
@@ -83,7 +98,7 @@ function groupings() {
 function parentheses() {
   return apply(
     (oppar, expr, cpar) => new ExprAST(expr),
-    [token(TokenType.OPPAR), lazy(factor), token(TokenType.CPAR)]
+    [token(TokenType.OPPAR), lazy(linear), token(TokenType.CPAR)]
   );
 }
 
@@ -102,7 +117,7 @@ function functions() {
         token(TokenType.LN),
       ]),
       token(TokenType.OPPAR),
-      lazy(factor),
+      lazy(linear),
       token(TokenType.CPAR),
     ]
   );
@@ -115,4 +130,14 @@ function symbols() {
   );
 }
 
-export { symbols, parentheses, functions, groupings, unary, power, factor };
+export {
+  symbols,
+  parentheses,
+  functions,
+  groupings,
+  unary,
+  power,
+  factor,
+  linear,
+  Parser,
+};

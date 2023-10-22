@@ -30,8 +30,8 @@ function linear() {
     ),
     (values) => {
       let root = values[0];
-      for (let index = 0; index < values.length - 1; index += 2) {
-        root = new BinaryAST(root, values[index], values[index + 1].type);
+      for (let index = 1; index < values.length - 1; index += 2) {
+        root = new BinaryAST(root, values[index + 1], values[index].type);
       }
       return root;
     }
@@ -52,8 +52,8 @@ function factor() {
     ),
     (values) => {
       let root = values[0];
-      for (let index = 0; index < values.length - 1; index += 2) {
-        root = new BinaryAST(root, values[index], values[index + 1].type);
+      for (let index = 1; index < values.length - 1; index += 2) {
+        root = new BinaryAST(root, values[index + 1], values[index].type);
       }
       return root;
     }

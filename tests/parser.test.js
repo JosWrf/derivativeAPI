@@ -11,10 +11,10 @@ import {
 } from "../src/parser.js";
 import {
   SymbolAST,
-  ExprAST,
   FuncAST,
   UnaryAST,
   BinaryAST,
+  ExprAST,
 } from "../src/ast.js";
 import { TokenType } from "../src/token.js";
 
@@ -112,4 +112,13 @@ test("Error: 13+y-", () => {
   const tokens = lexer.scanInput("13+y-");
   const parser = new Parser();
   expect(() => parser.parse(tokens)).toThrow();
+});
+
+test("Parse: x*(y/z)-k", () => {
+  const tokens = lexer.scanInput("x*(y/z)-k");
+  const parser = new Parser();
+  const result = parser.parse(tokens);
+  expect(result).toBeInstanceOf(BinaryAST);
+  expect(result.operator).toBe(TokenType.MINUS);
+  expect(result.right).toBeInstanceOf(SymbolAST);
 });

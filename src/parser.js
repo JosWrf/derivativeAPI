@@ -11,12 +11,42 @@ import {
 import { TokenType } from "./token.js";
 import { ExprAST, SymbolAST, FuncAST, UnaryAST, BinaryAST } from "./ast.js";
 
+function factor() {
+  return map(
+    apply(
+      (left, right) => [left, ...right],
+      [
+        lazy(power),
+        optional(
+          repeat(
+            apply(
+              (operator, value) => {
+                return { operator, value };
+              },
+              [
+                alternative(token(TokenType.MULT), token(TokenType.DIV)),
+                lazy(power),
+              ]
+            )
+          )
+        ),
+      ]
+    ),
+    (values) => {
+      let root = values[0];
+      for (let index = 1; index < values.length; index++) {
+        const nodeInfo = values[index];
+        root = new BinaryAST(root, nodeInfo.value, nodeInfo.operator.type);
+      }
+      return root;
+    }
+  );
+}
+
 function power() {
   return map(
     apply(
-      (left, right) => {
-        return right === null ? [left] : [left, ...right];
-      },
+      (left, right) => [left, ...right],
       [
         lazy(unary),
         optional(
@@ -53,7 +83,7 @@ function groupings() {
 function parentheses() {
   return apply(
     (oppar, expr, cpar) => new ExprAST(expr),
-    [token(TokenType.OPPAR), lazy(power), token(TokenType.CPAR)]
+    [token(TokenType.OPPAR), lazy(factor), token(TokenType.CPAR)]
   );
 }
 
@@ -72,7 +102,7 @@ function functions() {
         token(TokenType.LN),
       ]),
       token(TokenType.OPPAR),
-      lazy(power),
+      lazy(factor),
       token(TokenType.CPAR),
     ]
   );
@@ -85,4 +115,4 @@ function symbols() {
   );
 }
 
-export { symbols, parentheses, functions, groupings, unary, power };
+export { symbols, parentheses, functions, groupings, unary, power, factor };

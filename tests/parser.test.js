@@ -5,6 +5,7 @@ import {
   functions,
   unary,
   power,
+  factor,
 } from "../src/parser.js";
 import {
   SymbolAST,
@@ -64,4 +65,13 @@ test("Power Parser: x^x^x", () => {
   const result = power()(tokens);
   expect(result.input.length).toBe(1);
   expect(result.value).toBeInstanceOf(BinaryAST);
+});
+
+test("Factor parser: x*y/2", () => {
+  const tokens = lexer.scanInput("x*y/2");
+  const result = factor()(tokens);
+  expect(result.input.length).toBe(1);
+  expect(result.value).toBeInstanceOf(BinaryAST);
+  expect(result.value.left).toBeInstanceOf(BinaryAST);
+  expect(result.value.right).toBeInstanceOf(SymbolAST);
 });

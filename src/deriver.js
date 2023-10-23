@@ -1,5 +1,14 @@
 import { TokenType } from "./token";
 
+function chainRule(variables, innerFunction, derivatives, derivative) {
+  return variables.reduce((result, key) => {
+    result[key] = derivative + "(" + innerFunction + ")" +
+      "*" + "(" + derivatives[key] + ")";
+    return result;
+  }, {});
+}
+
+
 class Deriver {
   #variables = [];
 
@@ -25,15 +34,44 @@ class Deriver {
     const exprStr = exprNode.expr.accept(this);
     const exprString = "(" + exprStr.exprString + ")";
     const derivatives = this.#variables.reduce((result, key) => {
-          result[key] = "(" + exprStr.derivatives[key] + ")";
-          return result;
-        }, {});
-    return {exprString, derivatives};
+      result[key] = "(" + exprStr.derivatives[key] + ")";
+      return result;
+    }, {});
+    return { exprString, derivatives };
   }
 
   visitFunc(funcNode) {
     //TODO: Handle all the different functions + chain rule
-    return funcNode.expr.accept(this);
+    const exprStr = funcNode.expr.accept(this);
+    const funcName = funcNode.func.type;
+    const exprString = funcNode.func.lexeme + "(" + exprStr.exprString + ")";
+
+    let derivatives;
+
+    switch (funcName) {
+      case TokenType.COS:
+        derivatives = chainRule(this.#variables, exprStr.exprString, exprStr.derivatives, "-sin");
+        break;
+      case TokenType.ACOS:
+        break;
+      case TokenType.SIN:
+        derivatives = chainRule(this.#variables, exprStr.exprString, exprStr.derivatives, "cos");
+        break;
+      case TokenType.ASIN:
+        break;
+      case TokenType.TAN:
+        break;
+      case TokenType.ATAN:
+        break;
+      case TokenType.EXP:
+        break;
+      case TokenType.LN:
+        break;
+      default:
+        break;
+    }
+
+    return { exprString, derivatives };
   }
 
   visitBinary(binaryNode) {
@@ -57,7 +95,7 @@ class Deriver {
       case TokenType.MULT:
         derivatives = this.#variables.reduce((result, key) => {
           result[key] =
-            leftExpr.exprString + operator + rightExpr.derivatives[key] + "+" + 
+            leftExpr.exprString + operator + rightExpr.derivatives[key] + "+" +
             leftExpr.derivatives[key] + operator + rightExpr.exprString;
           return result;
         }, {});
@@ -66,7 +104,7 @@ class Deriver {
         derivatives = this.#variables.reduce((result, key) => {
           result[key] =
             "(" + leftExpr.derivatives[key] + "*" + rightExpr.exprString + "-" +
-            leftExpr.exprString + "*" + rightExpr.derivatives[key] + ")" + "/" + 
+            leftExpr.exprString + "*" + rightExpr.derivatives[key] + ")" + "/" +
             rightExpr.exprString + "^2";
           return result;
         }, {});
@@ -82,10 +120,10 @@ class Deriver {
     const exprStr = unaryNode.expr.accept(this);
     const exprString = "-" + exprStr.exprString;
     const derivatives = this.#variables.reduce((result, key) => {
-          result[key] = exprStr.derivatives[key] + "*(-1)";
-          return result;
-        }, {});
-    return {exprString, derivatives};
+      result[key] = exprStr.derivatives[key] + "*(-1)";
+      return result;
+    }, {});
+    return { exprString, derivatives };
   }
 }
 

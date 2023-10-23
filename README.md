@@ -14,7 +14,7 @@ parentheses    → "(" linear ")" ;
 functions      → fname "(" linear ")" ;
 symbols        → NUMBER | VAR ;
 
-fname          → "cos"|"acos"|"sin"|"asin"|
+fname          → "cos"|"accos"|"sin"|"asin"|
                 |"tan"|"atan"|"exp"|"ln" ;
 
 ```

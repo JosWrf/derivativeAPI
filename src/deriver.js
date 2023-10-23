@@ -2,7 +2,7 @@ import { TokenType } from "./token";
 
 function chainRule(variables, innerFunction, derivatives, derivative) {
   return variables.reduce((result, key) => {
-    result[key] = derivative + "(" + innerFunction + ")" +
+    result[key] = derivative.replace("_", innerFunction)  +
       "*" + "(" + derivatives[key] + ")";
     return result;
   }, {});
@@ -50,22 +50,28 @@ class Deriver {
 
     switch (funcName) {
       case TokenType.COS:
-        derivatives = chainRule(this.#variables, exprStr.exprString, exprStr.derivatives, "-sin");
+        derivatives = chainRule(this.#variables, exprStr.exprString, exprStr.derivatives, "-sin(_)");
         break;
       case TokenType.ACOS:
+        derivatives = chainRule(this.#variables, exprStr.exprString, exprStr.derivatives, "-1/(1+(_)^2)^0.5");
         break;
       case TokenType.SIN:
-        derivatives = chainRule(this.#variables, exprStr.exprString, exprStr.derivatives, "cos");
+        derivatives = chainRule(this.#variables, exprStr.exprString, exprStr.derivatives, "cos(_)");
         break;
       case TokenType.ASIN:
+        derivatives = chainRule(this.#variables, exprStr.exprString, exprStr.derivatives, "1/(1-(_)^2)^0.5");
         break;
       case TokenType.TAN:
+        derivatives = chainRule(this.#variables, exprStr.exprString, exprStr.derivatives, "1/cos(_)^2");
         break;
       case TokenType.ATAN:
+        derivatives = chainRule(this.#variables, exprStr.exprString, exprStr.derivatives, "1/(1+(_)^2)");
         break;
       case TokenType.EXP:
+        derivatives = chainRule(this.#variables, exprStr.exprString, exprStr.derivatives, "exp(_)");
         break;
       case TokenType.LN:
+        derivatives = chainRule(this.#variables, exprStr.exprString, exprStr.derivatives, "1/(_)");
         break;
       default:
         break;

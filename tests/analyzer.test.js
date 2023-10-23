@@ -56,11 +56,12 @@ test("Deriver: -(2+17)*x", () => {
   expect(typeof result.derivatives["x"]).toBe("string");
 });
 
-test("Deriver: cos(x+y)", () => {
-  const ast = parseInput("cos(x+y)");
+test.only("Deriver: exp(x+y)", () => {
+  const ast = parseInput("exp(x+y)");
   const variables = ast.accept(analyzer);
   deriver.variables = variables;
   const result = ast.accept(deriver);
   console.log(result);
   expect(typeof result.derivatives["x"]).toBe("string");
+  expect(typeof result.derivatives["y"]).toBe("string");
 });

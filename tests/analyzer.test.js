@@ -1,4 +1,6 @@
+import { BinaryAST, FuncAST } from "../src/ast.js";
 import { Analyzer } from "../src/astAnalyzer.js";
+import { ASTTransformer } from "../src/astTransformer.js";
 import { Deriver } from "../src/deriver.js";
 import { Lexer } from "../src/lexer.js";
 import { Parser } from "../src/parser.js";
@@ -7,6 +9,7 @@ const lexer = new Lexer();
 const parser = new Parser();
 const analyzer = new Analyzer();
 const deriver = new Deriver();
+const rewriter = new ASTTransformer();
 
 parseInput = (input) => {
   const tokens = lexer.scanInput(input);
@@ -83,3 +86,13 @@ test("Deriver: asin(-x)", () => {
   expect(result.exprString).toBe("asin(-x)");
   expect(result.derivatives["x"]).toBe("1/(1-(-x)^2)^0.5*(1*(-1))");
 });
+
+test("Tree Rewriter: x^x", () => {
+  const ast = parseInput("x^x");
+  const variables = ast.accept(analyzer);
+  deriver.variables = variables;
+  const result = ast.accept(rewriter);
+  expect(result).toBeInstanceOf(FuncAST);
+  expect(result.expr).toBeInstanceOf(BinaryAST);
+  expect(result.expr.right).toBeInstanceOf(FuncAST);
+})

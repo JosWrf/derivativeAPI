@@ -8,6 +8,9 @@ function chainRule(variables, innerFunction, derivatives, derivative) {
   }, {});
 }
 
+/* For ex1^ex2, we can write exp(ex2*ln(ex1)), thus we have
+diff ex1^ex2 = ex1^ex2*(diff(ex2)*ln(ex1)+ex2*1/ex1*diff(ex2))
+*/
 
 class Deriver {
   #variables = [];
@@ -110,6 +113,15 @@ class Deriver {
             "(" + leftExpr.derivatives[key] + "*" + rightExpr.exprString + "-" +
             leftExpr.exprString + "*" + rightExpr.derivatives[key] + ")" + "/" +
             rightExpr.exprString + "^2";
+          return result;
+        }, {});
+        break;
+      case TokenType.POW:
+        derivatives = this.#variables.reduce((result, key) => {
+          result[key] = exprString + "*" +
+            "(" + rightExpr.derivatives[key] + "*" + "ln(" + leftExpr.exprString + ")" +
+            "+" + rightExpr.exprString + "*" + `1/${leftExpr.exprString}` + "*" + 
+            rightExpr.derivatives[key] + ")";
           return result;
         }, {});
         break;

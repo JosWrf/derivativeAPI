@@ -41,7 +41,6 @@ class Deriver {
   }
 
   visitFunc(funcNode) {
-    //TODO: Handle all the different functions + chain rule
     const exprStr = funcNode.expr.accept(this);
     const funcName = funcNode.func.type;
     const exprString = funcNode.func.lexeme + "(" + exprStr.exprString + ")";
@@ -81,7 +80,6 @@ class Deriver {
   }
 
   visitBinary(binaryNode) {
-    //TODO: Handle all the different operators
     const leftExpr = binaryNode.left.accept(this);
     const rightExpr = binaryNode.right.accept(this);
     const operator = binaryNode.operator;

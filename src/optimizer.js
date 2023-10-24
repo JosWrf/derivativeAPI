@@ -75,10 +75,14 @@ class OptimizeBinary {
             return new Subexpression(applyOperator(operator, leftExpr, rightExpr), true);
         }
 
-        const isLeftZero = left.isConstant && parseFloat(left.exprString) === 0;
-        const isRightZero = right.isConstant && parseFloat(right.exprString) === 0;
-        const isLeftOne = left.isConstant && parseFloat(left.exprString) === 1;
-        const isRightOne = right.isConstant && parseFloat(right.exprString) === 1;
+        if (left.exprString === right.exprString && operator === TokenType.DIV){
+            return new Subexpression("1", true);
+        }
+
+        const isLeftZero = left.isConstant && parseFloat(leftExpr) === 0;
+        const isRightZero = right.isConstant && parseFloat(rightExpr) === 0;
+        const isLeftOne = left.isConstant && parseFloat(leftExpr) === 1;
+        const isRightOne = right.isConstant && parseFloat(rightExpr) === 1;
 
         if (isRightOne && [TokenType.MULT, TokenType.DIV, TokenType.POW].includes(operator)){
             return new Subexpression(left.exprString, false);
@@ -99,6 +103,7 @@ class OptimizeBinary {
         }
         else if (isLeftZero){
             switch (operator) {
+                case TokenType.DIV:
                 case TokenType.MULT:
                     return new Subexpression("0", true);
                 case TokenType.MINUS:

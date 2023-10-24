@@ -121,7 +121,7 @@ class Deriver {
           result[key] = exprString + "*" +
             "(" + rightExpr.derivatives[key] + "*" + "ln(" + leftExpr.exprString + ")" +
             "+" + rightExpr.exprString + "*" + `1/${leftExpr.exprString}` + "*" + 
-            rightExpr.derivatives[key] + ")";
+            leftExpr.derivatives[key] + ")";
           return result;
         }, {});
         break;

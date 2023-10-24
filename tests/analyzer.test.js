@@ -1,12 +1,14 @@
 import { Analyzer } from "../src/astAnalyzer.js";
 import { Deriver } from "../src/deriver.js";
 import { Lexer } from "../src/lexer.js";
+import { ExprOptimizer } from "../src/optimizer.js";
 import { Parser } from "../src/parser.js";
 
 const lexer = new Lexer();
 const parser = new Parser();
 const analyzer = new Analyzer();
 const deriver = new Deriver();
+const optimizer = new ExprOptimizer();
 
 parseInput = (input) => {
   const tokens = lexer.scanInput(input);
@@ -90,4 +92,28 @@ test("Deriver: x^x", () => {
   deriver.variables = variables;
   const result = ast.accept(deriver);
   expect(result.derivatives["x"]).toBe("x^x*(1*ln(x)+x*1/x*1)");
-})
+});
+
+test("Optimizer: (1+0)*(1-4)", () =>{
+  const ast = parseInput("(1+0)*(1-4)");
+  const variables = ast.accept(analyzer);
+  deriver.variables = variables;
+  const result = ast.accept(optimizer).exprString;
+  expect(result).toBe("(-3)");
+});
+
+test("Optimizer: -(2+17)*1+(0+0)*(-1)*x", () =>{
+  const ast = parseInput("-(2+17)*1+(0+0)*(-1)*x");
+  const variables = ast.accept(analyzer);
+  deriver.variables = variables;
+  const result = ast.accept(optimizer).exprString;
+  expect(result).toBe("(-19)");
+});
+
+test("Optimizer: x^x*(1*ln(x)+x*1/x*1)", () =>{
+  const ast = parseInput("x^x*(1*ln(x)+x*1/x*1)");
+  const variables = ast.accept(analyzer);
+  deriver.variables = variables;
+  const result = ast.accept(optimizer).exprString;
+  expect(result).toBe("x^x*(ln(x)+x/x)");
+});

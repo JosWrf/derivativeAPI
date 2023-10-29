@@ -44,8 +44,8 @@ test("Deriver: x*y", () => {
   deriver.variables = variables;
   const result = ast.accept(deriver);
   expect(result.exprString).toBe("x*y");
-  expect(result.derivatives["x"]).toBe("x*0+1*y");
-  expect(result.derivatives["y"]).toBe("x*1+0*y");
+  expect(result.derivatives["x"]).toBe("(x)*(0)+(1)*(y)");
+  expect(result.derivatives["y"]).toBe("(x)*(1)+(0)*(y)");
 });
 
 test("Deriver: x/y", () => {
@@ -54,8 +54,8 @@ test("Deriver: x/y", () => {
   deriver.variables = variables;
   const result = ast.accept(deriver);
   expect(result.exprString).toBe("x/y");
-  expect(result.derivatives["x"]).toBe("(1*y-x*0)/y^2");
-  expect(result.derivatives["y"]).toBe("(0*y-x*1)/y^2");
+  expect(result.derivatives["x"]).toBe("((1)*(y)-((x)*(0)))/(y)^2");
+  expect(result.derivatives["y"]).toBe("((0)*(y)-((x)*(1)))/(y)^2");
 });
 
 test("Deriver: -(2+17)*x", () => {
@@ -64,7 +64,7 @@ test("Deriver: -(2+17)*x", () => {
   deriver.variables = variables;
   const result = ast.accept(deriver);
   expect(result.exprString).toBe("-(2+17)*x");
-  expect(result.derivatives["x"]).toBe("-(2+17)*1+(0+0)*(-1)*x");
+  expect(result.derivatives["x"]).toBe("(-(2+17))*(1)+(((0+0))*(-1))*(x)");
 });
 
 test("Deriver: exp(x+y)", () => {
@@ -83,7 +83,7 @@ test("Deriver: asin(-x)", () => {
   deriver.variables = variables;
   const result = ast.accept(deriver);
   expect(result.exprString).toBe("asin(-x)");
-  expect(result.derivatives["x"]).toBe("1/(1-(-x)^2)^0.5*(1*(-1))");
+  expect(result.derivatives["x"]).toBe("1/(1-(-x)^2)^0.5*((1)*(-1))");
 });
 
 test("Deriver: x^x", () => {
@@ -125,4 +125,3 @@ test("Optimizer: cos(x)^0*sin(0)+(0/17)", () => {
   const result = ast.accept(optimizer).exprString;
   expect(result).toBe("sin(0)");
 });
-

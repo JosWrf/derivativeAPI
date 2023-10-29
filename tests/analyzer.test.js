@@ -102,6 +102,14 @@ test("Optimizer: (1+0)*(1-4)", () => {
   expect(result).toBe("(-3)");
 });
 
+test("Optimizer: (2)*(y)", () => {
+  const ast = parseInput("(2)*(y)");
+  const variables = ast.accept(analyzer);
+  deriver.variables = variables;
+  const result = ast.accept(optimizer).exprString;
+  expect(result).toBe("2*y");
+});
+
 test("Optimizer: -(2+17)*1+(0+0)*(-1)*x", () => {
   const ast = parseInput("-(2+17)*1+(0+0)*(-1)*x");
   const variables = ast.accept(analyzer);
@@ -125,3 +133,26 @@ test("Optimizer: cos(x)^0*sin(0)+(0/17)", () => {
   const result = ast.accept(optimizer).exprString;
   expect(result).toBe("sin(0)");
 });
+
+test("Deriver + Optimizer: 1/5*(x^2+2*x*y)", () => {
+  const ast = parseInput("1/5*(x^2+2*x*y)");
+  const variables = ast.accept(analyzer);
+  deriver.variables = variables;
+  const derivation = ast.accept(deriver);
+
+  const derivationAST = parseInput(derivation.derivatives["x"]);
+  const result = derivationAST.accept(optimizer);
+  expect(result.exprString).toBe("0.2*((x^2*(2/x)+2*y))");
+});
+
+test("Deriver + Optimizer: x^n*y^m", () => {
+  const ast = parseInput("x^n*y^m");
+  const variables = ast.accept(analyzer);
+  deriver.variables = variables;
+  const derivation = ast.accept(deriver);
+
+  const derivationAST = parseInput(derivation.derivatives["y"]);
+  const result = derivationAST.accept(optimizer);
+  expect(result.exprString).toBe("(x^n)*(y^m*(m/y))");
+});
+

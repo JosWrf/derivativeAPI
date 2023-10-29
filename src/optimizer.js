@@ -3,21 +3,23 @@ import { TokenType } from "./token.js";
 class Subexpression {
     isConstant;
     exprString;
+    singleTerm;
 
-    constructor(exprString, isConstant) {
+    constructor(exprString, isConstant, singleTerm = false) {
         this.exprString = exprString;
         this.isConstant = isConstant;
+        this.singleTerm = singleTerm;
     }
 }
 
 class ExprOptimizer {
     visitSymbol(symbolNode) {
-        return new Subexpression(symbolNode.value.lexeme, symbolNode.value.type === TokenType.NUM);
+        return new Subexpression(symbolNode.value.lexeme, symbolNode.value.type === TokenType.NUM, true);
     }
 
     visitExpr(exprNode) {
         const subexpr = exprNode.expr.accept(this);
-        return new Subexpression("(" + subexpr.exprString + ")", subexpr.isConstant);
+        return new Subexpression("(" + subexpr.exprString + ")", subexpr.isConstant, subexpr.singleTerm);
     }
 
     visitFunc(funcNode) {
@@ -67,16 +69,23 @@ applyOperator = (operator, left, right) => {
 
 class OptimizeBinary {
     static optimize(left, right, operator) {
+        if (left.singleTerm){
+            left.exprString = left.exprString.replace(/^[(]/, "").replace(/[)]$/, "");
+        }
+        if (right.singleTerm){
+            right.exprString = right.exprString.replace(/^[(]/, "").replace(/[)]$/, "");
+        }
+
         let subExpr = left.exprString + operator + right.exprString;
         const leftExpr = !left.isConstant ? left : left.exprString.replace(/[()]/g, "");
         const rightExpr = !right.isConstant ? right : right.exprString.replace(/[()]/g, "");
 
         if (left.isConstant && right.isConstant) {
-            return new Subexpression(applyOperator(operator, leftExpr, rightExpr), true);
+            return new Subexpression(applyOperator(operator, leftExpr, rightExpr), true, true);
         }
 
         if (left.exprString === right.exprString && operator === TokenType.DIV){
-            return new Subexpression("1", true);
+            return new Subexpression("1", true, true);
         }
 
         const isLeftZero = left.isConstant && parseFloat(leftExpr) === 0;
@@ -93,9 +102,9 @@ class OptimizeBinary {
         else if (isRightZero){
             switch (operator) {
                 case TokenType.MULT:
-                    return new Subexpression("0", true);
+                    return new Subexpression("0", true, true);
                 case TokenType.POW:
-                    return new Subexpression("1", true);
+                    return new Subexpression("1", true, true);
                 case TokenType.MINUS:
                 case TokenType.PLUS:
                     return new Subexpression(left.exprString, false);
@@ -105,7 +114,7 @@ class OptimizeBinary {
             switch (operator) {
                 case TokenType.DIV:
                 case TokenType.MULT:
-                    return new Subexpression("0", true);
+                    return new Subexpression("0", true, true);
                 case TokenType.MINUS:
                     return new Subexpression("-" + "(" + right.exprString + ")", false) 
                 case TokenType.PLUS:
